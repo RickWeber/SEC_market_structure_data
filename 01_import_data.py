@@ -4,6 +4,7 @@ import re
 import pandas as pd
 import io
 import zipfile
+import os
 
 url = "https://www.sec.gov/opa/data/market-structure/marketstructuredownloadshtml-by_security"
 page = requests.get(url).content
@@ -24,7 +25,11 @@ def link_to_df(link):
     print([f.filename for f in z.filelist])
     keep = [f.filename for f in z.filelist if re.search('csv', f.filename)][0]
     path = z.extract(keep)
-    return pd.read_csv(path)
+    # remove downloaded file
+    df = pd.read_csv(path)
+    os.remove(path)
+    return df
+
 
 df = link_to_df(zip_base + zip_links[0])
 
@@ -32,4 +37,4 @@ for z in zip_links[1:]:
     this_df = link_to_df(zip_base + z)
     df = pd.concat([df, this_df])
 
-df.sample(10)
+df.to_csv('sec_market_structure.csv')
